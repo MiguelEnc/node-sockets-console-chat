@@ -8,7 +8,7 @@ server.on("connection", (socket) => {
 
     socket.setEncoding("utf-8");
     socket.on("data", (message) => {
-        console.log(`${remoteSocket} -> ${message}`);
+        console.log(`[${remoteSocket}]: ${message}`);
     });
 
     socket.on("close", () => {
