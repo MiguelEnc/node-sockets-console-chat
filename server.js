@@ -3,12 +3,19 @@ const { Server } = require("net");
 const server = new Server();
 
 server.on("connection", (socket) => {
-    const fullRemoteAddress = `${socket.remoteAddress}:${socket.remotePort}`;
-    console.log(`New connection from ${fullRemoteAddress}`);
+    const remoteSocket = `${socket.remoteAddress}:${socket.remotePort}`;
+    console.log(`New connection from ${remoteSocket}`);
 
     socket.setEncoding("utf-8");
-    socket.on("data", (data) => {
-        socket.write(data);
+    socket.on("data", (message) => {
+        console.log(`${remoteSocket} -> ${message}`);
+    });
+
+    socket.on("close", () => {
+        console.log(`${remoteSocket} disconnected.`);
+    });
+    socket.on('error', (err) => {
+        console.error(`${remoteSocket} disconnected with error: ${err.message}`);
     });
 });
 
