@@ -1,44 +1,52 @@
 const { Server } = require("net");
+const Publisher = require("./publisher");
 
 const HOST = "0.0.0.0"
 const END = 'END';
+const connections = new Map();
 
-const error = (err) => {
-    console.error(err);
+const error = (message) => {
+    console.error(message);
     process.exit(1);
 }
 
 const listen = (port) => {
     const server = new Server();
-    const connections = [];
     
     server.on("connection", (socket) => {
         const remoteSocket = `${socket.remoteAddress}:${socket.remotePort}`;
         console.log(`New connection from ${remoteSocket}`);
         socket.setEncoding("utf-8");
-        connections.push(socket);
     
         socket.on("data", (message) => {
-            console.log(`[${remoteSocket}]: ${message}`);
-
-            if (message === END) {
+            if (!connections.has(socket)) {
+                const participant = new Publisher(message);
+                connections.forEach((val, key) => {
+                    val.addSubscriber(socket);
+                    participant.addSubscriber(key);
+                });
+                connections.set(socket, participant);
+            } else if (message === END) {
                 socket.end();
+            } else {
+                const participant = connections.get(socket);
+                participant.notifySubscribers(message);
+                console.log(participant.logMessage(message));
             }
-    
-            connections.filter(((peer) => {
-                const socketAddress = `${peer.remoteAddress}:${peer.remotePort}`;
-                return socketAddress !== remoteSocket;
-            })).forEach((peer) => peer.write(message));
         });
     
         socket.on("close", () => {
             console.log(`Connection with ${remoteSocket} closed.`);
         });
+
+        socket.on("error", (err) => error(err.message));
     });
 
     server.listen({ port, host: HOST }, () => {
         console.log("Listening on port 8000");
     });
+
+    server.on('error', (err) => error(err.message));
 }
 
 const main = () => {

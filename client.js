@@ -12,9 +12,10 @@ const END = 'END';
 readline.question('Enter chat username: ', (username) => {
     socket.connect({ host: "localhost", port: 8000 });
     socket.setEncoding("utf-8");
+    socket.write(username);
 
     readline.on("line", (message) => {
-        socket.write(`${username}> ${message}`);
+        socket.write(message);
         if (message === END) {
             socket.end();
         }
