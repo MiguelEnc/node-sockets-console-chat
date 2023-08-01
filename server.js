@@ -1,23 +1,19 @@
 const { Server } = require("net");
 const Publisher = require("./publisher");
+const { error, END } = require("./utilities");
 
-const HOST = "0.0.0.0"
-const END = 'END';
+const HOST = "0.0.0.0";
+
 const connections = new Map();
-
-const error = (message) => {
-    console.error(message);
-    process.exit(1);
-}
 
 const listen = (port) => {
     const server = new Server();
-    
+
     server.on("connection", (socket) => {
         const remoteSocket = `${socket.remoteAddress}:${socket.remotePort}`;
         console.log(`New connection from ${remoteSocket}`);
         socket.setEncoding("utf-8");
-    
+
         socket.on("data", (message) => {
             if (!connections.has(socket)) {
                 const participant = new Publisher(message);
@@ -27,6 +23,7 @@ const listen = (port) => {
                 });
                 connections.set(socket, participant);
             } else if (message === END) {
+                // remove socket from connections and from subscribers
                 socket.end();
             } else {
                 const participant = connections.get(socket);
@@ -34,7 +31,7 @@ const listen = (port) => {
                 console.log(participant.logMessage(message));
             }
         });
-    
+
         socket.on("close", () => {
             console.log(`Connection with ${remoteSocket} closed.`);
         });
@@ -46,8 +43,8 @@ const listen = (port) => {
         console.log("Listening on port 8000");
     });
 
-    server.on('error', (err) => error(err.message));
-}
+    server.on("error", (err) => error(err.message));
+};
 
 const main = () => {
     if (process.argv.length !== 3) {
