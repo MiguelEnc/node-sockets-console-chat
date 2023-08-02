@@ -23,7 +23,8 @@ const listen = (port) => {
                 });
                 connections.set(socket, participant);
             } else if (message === END) {
-                // remove socket from connections and from subscribers
+                connections.delete(socket);
+                connections.forEach((val) => val.removeSubscriber(socket));
                 socket.end();
             } else {
                 const participant = connections.get(socket);

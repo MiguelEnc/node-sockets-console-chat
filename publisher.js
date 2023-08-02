@@ -8,6 +8,10 @@ class Publisher {
     this.subscribers.add(subscriber);
   }
 
+  removeSubscriber(subscriber) {
+    this.subscribers.delete(subscriber);
+  }
+
   notifySubscribers(message) {
     this.subscribers.forEach((peer) => peer.write(this.logMessage(message)));
   }
